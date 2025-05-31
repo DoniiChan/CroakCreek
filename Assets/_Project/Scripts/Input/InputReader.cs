@@ -13,9 +13,9 @@ namespace CroakCreek
         public event UnityAction EnableMouseControlCamera = delegate { };
         public event UnityAction DisableMouseControlCamera = delegate { };
 
-        PlayerInputActions inputActions;
+        private PlayerInputActions inputActions;
 
-        public Vector3 Direction => inputActions.Player.Move.ReadValue<Vector2>();
+        public Vector3 Direction => inputActions?.Player.Move.ReadValue<Vector2>() ?? Vector2.zero;
 
         void OnEnable()
         {
@@ -24,35 +24,36 @@ namespace CroakCreek
                 inputActions = new PlayerInputActions();
                 inputActions.Player.SetCallbacks(this);
             }
+
             inputActions.Enable();
         }
 
-        void PlayerInputActions.IPlayerActions.OnMove(InputAction.CallbackContext context)
+        public void Disable()
+        {
+            if (inputActions != null)
+            {
+                inputActions.Disable();
+                inputActions.Dispose();
+                inputActions = null;
+            }
+        }
+
+        public void OnMove(InputAction.CallbackContext context)
         {
             Move.Invoke(context.ReadValue<Vector2>());
         }
 
-        void PlayerInputActions.IPlayerActions.OnLook(InputAction.CallbackContext context)
+        public void OnLook(InputAction.CallbackContext context)
         {
             Look.Invoke(context.ReadValue<Vector2>(), IsDeviceMouse(context));
         }
 
         bool IsDeviceMouse(InputAction.CallbackContext context) => context.control.device.name == "Mouse";
 
-        void PlayerInputActions.IPlayerActions.OnJump(InputAction.CallbackContext context)
-        {
-            // noop
-        }
+        public void OnJump(InputAction.CallbackContext context) { /* noop */ }
+        public void OnFire(InputAction.CallbackContext context) { /* noop */ }
+        public void OnRun(InputAction.CallbackContext context) { /* noop */ }
 
-        void PlayerInputActions.IPlayerActions.OnFire(InputAction.CallbackContext context)
-        {
-            // noop
-        }
-
-        void PlayerInputActions.IPlayerActions.OnRun(InputAction.CallbackContext context)
-        {
-            // noop
-        }
         public void OnMouseControlCamera(InputAction.CallbackContext context)
         {
             switch (context.phase)
