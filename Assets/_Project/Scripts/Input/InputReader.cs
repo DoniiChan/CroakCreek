@@ -12,6 +12,7 @@ namespace CroakCreek
         public event UnityAction<Vector2, bool> Look = delegate { };
         public event UnityAction EnableMouseControlCamera = delegate { };
         public event UnityAction DisableMouseControlCamera = delegate { };
+        public event UnityAction<bool> Jump = delegate { };
 
         private PlayerInputActions inputActions;
 
@@ -28,14 +29,26 @@ namespace CroakCreek
             inputActions.Enable();
         }
 
-        public void Disable()
+        void OnDisable()
         {
             if (inputActions != null)
             {
-                inputActions.Disable();
-                inputActions.Dispose();
+                inputActions.Disable(); // Disables all maps
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (inputActions != null)
+            {
+                inputActions.Dispose(); // Fully releases unmanaged resources
                 inputActions = null;
             }
+        }
+
+        public void Disable()
+        {
+            inputActions?.Disable();
         }
 
         public void OnMove(InputAction.CallbackContext context)
@@ -50,7 +63,18 @@ namespace CroakCreek
 
         bool IsDeviceMouse(InputAction.CallbackContext context) => context.control.device.name == "Mouse";
 
-        public void OnJump(InputAction.CallbackContext context) { /* noop */ }
+        public void OnJump(InputAction.CallbackContext context) 
+        {
+            switch (context.phase)
+            {
+                case InputActionPhase.Started:
+                    Jump.Invoke(true);
+                    break;
+                case InputActionPhase.Canceled:
+                    Jump.Invoke(false);
+                    break;
+            }
+        }
         public void OnFire(InputAction.CallbackContext context) { /* noop */ }
         public void OnRun(InputAction.CallbackContext context) { /* noop */ }
 
