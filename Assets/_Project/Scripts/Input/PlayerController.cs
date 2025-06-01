@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Cinemachine;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 using Utilities;
@@ -19,9 +20,13 @@ namespace CroakCreek
         [SerializeField, Anywhere] InputReader input;
 
         [Header("Movement Settings")]
-        [SerializeField] float moveSpeed = 6f;
+        [SerializeField] float walkSpeed = 400f;
+        [SerializeField] float runSpeed = 500f;
         [SerializeField] float rotationSpeed = 15f;
         [SerializeField] float smoothTime = 0.2f;
+
+        private bool isRunning = false;
+        private float moveSpeed => isRunning ? runSpeed : walkSpeed;
 
         [Header("Jump Settings")]
         [SerializeField] float jumpForce = 10f;
@@ -40,7 +45,7 @@ namespace CroakCreek
 
         Vector3 movement;
 
-        List<Timer> timers;
+        List<Utilities.Timer> timers;
         CountdownTimer jumpTimer;
         CountdownTimer jumpCooldownTimer;
 
@@ -53,7 +58,7 @@ namespace CroakCreek
             // setup timers
             jumpTimer = new CountdownTimer(jumpDuration);
             jumpCooldownTimer = new CountdownTimer(jumpCooldown);
-            timers = new List<Timer>(capacity: 2) { jumpTimer, jumpCooldownTimer };
+            timers = new List<Utilities.Timer>(capacity: 2) { jumpTimer, jumpCooldownTimer };
 
             jumpTimer.OnTimerStop += () => jumpCooldownTimer.Start();
         }
@@ -61,13 +66,13 @@ namespace CroakCreek
         private void OnEnable()
         {
             input.Jump += OnJump;
+            input.Run += OnRun;
         }
 
         private void OnDisable()
         {
             input.Jump -= OnJump;
-            //if (input != null)
-            //    input.Disable();
+            input.Run -= OnRun;
         }
 
         void OnJump(bool performed)
@@ -80,6 +85,11 @@ namespace CroakCreek
             {
                 jumpTimer.Stop();
             }
+        }
+
+        private void OnRun(bool runState)
+        {
+            isRunning = runState;
         }
 
         private void Update()
@@ -117,18 +127,12 @@ namespace CroakCreek
             // If jumping or falling calculate velocity
             if (jumpTimer.IsRunning)
             {
-                // Progress point for initial burst of velocity
-                float launchPoint = 0.9f;
-                if (jumpTimer.Progress > launchPoint)
+                if (jumpTimer.Progress > 0f)
                 {
                     // Calculate the velocity required to reach the jump height using physics equations v = sqrt(2gh)
                     jumpVelocity = Mathf.Sqrt(2 * jumpMaxHeight * Mathf.Abs(Physics.gravity.y));
                 }
-                else
-                {
-                    // Gradually apply less velocity as the jump progresses
-                    jumpVelocity += (1 - jumpTimer.Progress) * jumpForce * Time.fixedDeltaTime;
-                }
+
             }
             else
             {
@@ -142,12 +146,9 @@ namespace CroakCreek
 
         private void HandleMovement()
         {
-            //var movementDirection = new Vector3(input.Direction.x, 0f, input.Direction.y);
-            // Rotate movement direction to match camera rotation
-            var adjustedDirection = Quaternion.AngleAxis(mainCam.eulerAngles.y, Vector3.up) * movement;
+            var adjustedDirection = movement.normalized;
             if (adjustedDirection.magnitude > ZeroF)
             {
-                HandleRotation(adjustedDirection);
                 HandleHorizontalMovement(adjustedDirection);
                 SmoothSpeed(adjustedDirection.magnitude);
 
@@ -155,8 +156,6 @@ namespace CroakCreek
             else
             {
                 SmoothSpeed(ZeroF);
-
-                // Reset horizontal velocity for a snappy stop
                 rb.linearVelocity = new Vector3(ZeroF, rb.linearVelocity.y, ZeroF);
             }
         }
@@ -168,17 +167,21 @@ namespace CroakCreek
             rb.linearVelocity = new Vector3(velocity.x, rb.linearVelocity.y, velocity.z);
         }
 
-        void HandleRotation(Vector3 adjustedDirection)
-        {
-            // Adjust rotation to match movement direction
-            var targetRotation = Quaternion.LookRotation(adjustedDirection);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-            transform.LookAt(transform.position + adjustedDirection);
-        }
-
         void SmoothSpeed(float value)
         {
             currentSpeed = Mathf.SmoothDamp(currentSpeed, value, ref velocity, smoothTime);
         }
     }
 }
+
+
+
+// Legacy Code
+
+//  HandleRotation(adjustedDirection);
+//  void HandleRotation(Vector3 adjustedDirection)
+//  {
+//      var targetRotation = Quaternion.LookRotation(adjustedDirection);
+//      transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+//      transform.LookAt(transform.position + adjustedDirection);
+//  }
