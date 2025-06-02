@@ -1,5 +1,7 @@
+using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace CroakCreek
 {
@@ -7,17 +9,46 @@ namespace CroakCreek
     {
         private int Coin = 0;
 
-        public TextMeshProUGUI coinText;
+        [SerializeField] HealthManager healthManager;
+        [SerializeField] StaminaManager staminaManager;
+        [SerializeField] PanelEventHandler levelUp;
+        [SerializeField] TextMeshProUGUI coinText;
+
+        private void Awake()
+        {
+            levelUp.gameObject.SetActive(false);
+        }
 
         private void OnTriggerEnter(Collider other)
         {
-            if(other.transform.tag == "Coin")
+            if(other.CompareTag("Coin"))
             {
                 Coin++;
-                coinText.text = "Coins: " + Coin.ToString();
-                Debug.Log(Coin);
+                coinText.text = "Coins: " + Coin;
+                Debug.Log("Coins: " + Coin);
                 Destroy(other.gameObject);
+
+                if (Coin % 3 == 0)
+                {
+                    levelUp.gameObject.SetActive(true);
+                    Coin = 0;
+                }
             }
+        }
+
+        public void IncreaseMaxHealth()
+        {
+            healthManager.maxHp += 5;
+            healthManager.HealFull();
+            levelUp.gameObject.SetActive(false);
+            Debug.Log("Max HP increased to " + healthManager.maxHp);
+        }
+
+        public void IncreaseMaxStamina()
+        {
+            staminaManager.maxSta += 3;
+            levelUp.gameObject.SetActive(false);
+            Debug.Log("Max Stamina increased to " + staminaManager.maxSta);
         }
     }
 }

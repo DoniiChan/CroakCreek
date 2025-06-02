@@ -16,6 +16,8 @@ namespace CroakCreek
         [Header("References")]
         [SerializeField, Self] Rigidbody rb;
         [SerializeField, Self] GroundChecker groundChecker;
+        [SerializeField] StaminaManager staminaManager;
+        [SerializeField] StaminaBar staminaBar;
         [SerializeField, Anywhere] InputReader input;
 
         [Header("Movement Settings")]
@@ -44,6 +46,7 @@ namespace CroakCreek
         List<Utilities.Timer> timers;
         CountdownTimer jumpTimer;
         CountdownTimer jumpCooldownTimer;
+        StopwatchTimer runTimer;
 
         private void Awake()
         {
@@ -52,7 +55,8 @@ namespace CroakCreek
             // setup timers
             jumpTimer = new CountdownTimer(jumpDuration);
             jumpCooldownTimer = new CountdownTimer(jumpCooldown);
-            timers = new List<Utilities.Timer>(capacity: 2) { jumpTimer, jumpCooldownTimer };
+            runTimer = new StopwatchTimer();
+            timers = new List<Utilities.Timer>(capacity: 3) { jumpTimer, jumpCooldownTimer, runTimer };
 
             jumpTimer.OnTimerStop += () => jumpCooldownTimer.Start();
         }
@@ -83,7 +87,9 @@ namespace CroakCreek
 
         private void OnRun(bool runState)
         {
-            isRunning = runState;
+            // Only toggle the running flag here
+            isRunning = runState && staminaManager.currentSta > 0;
+            runTimer.Start();
         }
 
         private void Update()
@@ -91,7 +97,11 @@ namespace CroakCreek
             movement = new Vector3(input.Direction.x, 0f, input.Direction.y);
 
             HandleTimers();
-            //UpdateAnimator();
+
+            if (isRunning && movement.magnitude > 0f)
+                HandleStaminaDrain();
+            else
+                HandleStaminaRegen();
         }
 
         private void FixedUpdate()
@@ -159,6 +169,53 @@ namespace CroakCreek
             // Move the player
             Vector3 velocity = adjustedDirection * moveSpeed * Time.fixedDeltaTime;
             rb.linearVelocity = new Vector3(velocity.x, rb.linearVelocity.y, velocity.z);
+        }
+
+
+        private void HandleStaminaDrain()
+        {
+            if (isRunning && movement.magnitude > 0f)
+            {
+                if (!runTimer.IsRunning)
+                    runTimer.Start();
+
+                if (runTimer.GetTime() >= 0.25f)
+                {
+                    staminaManager.DecreaseStamina(1);
+                    staminaBar.SetValue(staminaManager.currentSta);
+                    runTimer.Reset();
+
+                    if (staminaManager.currentSta <= 0)
+                    {
+                        isRunning = false;
+                        Debug.Log("Out of Stamina!");
+                    }
+                }
+            }
+            else
+            {
+                runTimer.Stop();
+            }
+        }
+
+        void HandleStaminaRegen()
+        {
+            if (!isRunning && staminaManager.currentSta < staminaManager.maxSta)
+            {
+                if (!runTimer.IsRunning)
+                    runTimer.Start();
+
+                if (runTimer.GetTime() >= 0.135f)
+                {
+                    staminaManager.RestoreStamina(1);
+                    staminaBar.SetValue(staminaManager.currentSta);
+                    runTimer.Reset();
+                }
+            }
+            else
+            {
+                runTimer.Stop();
+            }
         }
 
         void SmoothSpeed(float value)
