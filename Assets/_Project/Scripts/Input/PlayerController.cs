@@ -22,14 +22,12 @@ namespace CroakCreek
         [Header("Movement Settings")]
         [SerializeField] float walkSpeed = 400f;
         [SerializeField] float runSpeed = 500f;
-        [SerializeField] float rotationSpeed = 15f;
         [SerializeField] float smoothTime = 0.2f;
 
         private bool isRunning = false;
         private float moveSpeed => isRunning ? runSpeed : walkSpeed;
 
         [Header("Jump Settings")]
-        [SerializeField] float jumpForce = 10f;
         [SerializeField] float jumpDuration = 0.5f;
         [SerializeField] float jumpCooldown = 0f;
         [SerializeField] float jumpMaxHeight = 2f;
