@@ -33,11 +33,10 @@ namespace CroakCreek
         [SerializeField] float jumpDuration = 0.5f;
         [SerializeField] float jumpCooldown = 0f;
         [SerializeField] float jumpMaxHeight = 2f;
-        [SerializeField] float gravityMultiplier = 3f;
+        [SerializeField] float gravityMultiplier = 8f;
+        [SerializeField] float ascentGravityMultiplier = 2f; // or 2.5f — tweakable
 
         const float ZeroF = 0f;
-
-        Transform mainCam;
 
         float currentSpeed;
         float velocity;
@@ -51,8 +50,6 @@ namespace CroakCreek
 
         private void Awake()
         {
-            mainCam = Camera.main.transform;
-
             rb.freezeRotation = true;
 
             // setup timers
@@ -129,10 +126,10 @@ namespace CroakCreek
             {
                 if (jumpTimer.Progress > 0f)
                 {
-                    // Calculate the velocity required to reach the jump height using physics equations v = sqrt(2gh)
-                    jumpVelocity = Mathf.Sqrt(2 * jumpMaxHeight * Mathf.Abs(Physics.gravity.y));
+                    // Use stronger gravity to make ascent faster
+                    float effectiveGravity = Mathf.Abs(Physics.gravity.y) * ascentGravityMultiplier;
+                    jumpVelocity = Mathf.Sqrt(2 * jumpMaxHeight * effectiveGravity);
                 }
-
             }
             else
             {
@@ -176,7 +173,7 @@ namespace CroakCreek
 
 
 
-// Legacy Code
+// Might Re-use
 
 //  HandleRotation(adjustedDirection);
 //  void HandleRotation(Vector3 adjustedDirection)
