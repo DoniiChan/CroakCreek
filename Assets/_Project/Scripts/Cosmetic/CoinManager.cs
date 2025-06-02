@@ -30,8 +30,6 @@ namespace CroakCreek
             {
                 coin.transform.rotation = rotation;
             }
-
-            print($"Updated {coins.Count} coins");
         }
 
         public void Register(Coin coin)

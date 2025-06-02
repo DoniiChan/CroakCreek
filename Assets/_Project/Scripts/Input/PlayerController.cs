@@ -16,7 +16,6 @@ namespace CroakCreek
         [Header("References")]
         [SerializeField, Self] Rigidbody rb;
         [SerializeField, Self] GroundChecker groundChecker;
-        [SerializeField, Self] Animator animator;
         [SerializeField, Anywhere] InputReader input;
 
         [Header("Movement Settings")]
