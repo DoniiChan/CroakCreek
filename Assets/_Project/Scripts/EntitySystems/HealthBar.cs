@@ -6,25 +6,73 @@ namespace CroakCreek
     public class HealthBar : MonoBehaviour
     {
         [SerializeField] HealthManager hp;
-        [SerializeField] RectTransform barRect;
-        [SerializeField] RectMask2D mask;
+        [SerializeField] RectTransform barFill;       // Fixed width fill image
+        [SerializeField] RectMask2D barMask;          // Mask that clips the fill
+        [SerializeField] RectTransform border;        // Optional border image
+        [SerializeField] float pixelsPerHp = 10f;     // Width per HP
 
-        private float maxRightMask;
-        private float initialRightMask;
+        private float fullWidth;
 
         private void Start()
         {
-            maxRightMask = barRect.rect.width - mask.padding.x - mask.padding.z;
-            initialRightMask = mask.padding.z;
+            hp.Damaged.AddListener(SetValue);
+            hp.Healed.AddListener(SetValue);
+
+            ResizeBar();
+            SetValue(hp.currentHp);
+        }
+
+        private void Update()
+        {
+            // Resize if maxHp changed at runtime
+            if (hp.maxHp * pixelsPerHp != fullWidth)
+            {
+                ResizeBar();
+                SetValue(hp.currentHp);
+            }
+        }
+
+        private void ResizeBar()
+        {
+            fullWidth = hp.maxHp * pixelsPerHp;
+
+            // Set barFill width fixed to full width
+            Vector2 fillSize = barFill.sizeDelta;
+            fillSize.x = fullWidth;
+            barFill.sizeDelta = fillSize;
+
+            // Set barMask size to fullWidth (same size as fill)
+            RectTransform maskRect = barMask.GetComponent<RectTransform>();
+            Vector2 maskSize = maskRect.sizeDelta;
+            maskSize.x = fullWidth;
+            maskRect.sizeDelta = maskSize;
+
+            // Resize border if any
+            if (border != null)
+            {
+                Vector2 borderSize = border.sizeDelta;
+                borderSize.x = fullWidth;
+                border.sizeDelta = borderSize;
+            }
+
+            // Reset padding so no clipping initially
+            var p = barMask.padding;
+            p.z = 0; // right padding = 0 means fully visible
+            barMask.padding = p;
         }
 
         public void SetValue(int newValue)
         {
-            var targetWidth = newValue * maxRightMask / hp.maxHp;
-            var newRightMask = maxRightMask + initialRightMask - targetWidth;
-            var padding = mask.padding;
-            padding.z = newRightMask;
-            mask.padding = padding;
+            // Calculate how much of the right side to mask (clip)
+            float visibleWidth = (float)newValue / hp.maxHp * fullWidth;
+            float clipAmount = fullWidth - visibleWidth;
+
+            // Clamp clip amount (padding.z is right padding)
+            clipAmount = Mathf.Clamp(clipAmount, 0, fullWidth);
+
+            var padding = barMask.padding;
+            padding.z = clipAmount;   // Increase right padding to mask more
+            barMask.padding = padding;
         }
     }
 }
