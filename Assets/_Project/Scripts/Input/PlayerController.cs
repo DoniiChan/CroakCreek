@@ -38,12 +38,15 @@ namespace CroakCreek
         [SerializeField] float jumpMaxHeight = 2f;
         [SerializeField] float gravityMultiplier = 8f;
         [SerializeField] float ascentGravityMultiplier = 2f;
+        [SerializeField] float coyoteTime = 0.2f;
+        [SerializeField] float jumpBufferTime = 0.2f;
 
         private bool isRunning;
         private bool runInputHeld;
         private bool isDashing;
         private bool outOfSta;
         private bool canRun;
+        private bool wasGrounded;
 
         const float ZeroF = 0f;
         float moveSpeed => isRunning ? runSpeed : walkSpeed;
@@ -59,6 +62,8 @@ namespace CroakCreek
         // Jump Timers
         CountdownTimer jumpTimer;
         CountdownTimer jumpCooldownTimer;
+        CountdownTimer coyoteTimer;
+        CountdownTimer jumpBufferTimer;
 
         // Dash Timers
         CountdownTimer dashTimer;
@@ -81,6 +86,8 @@ namespace CroakCreek
             // setup timers
             jumpTimer = new CountdownTimer(jumpDuration);
             jumpCooldownTimer = new CountdownTimer(jumpCooldown);
+            coyoteTimer = new CountdownTimer(coyoteTime);
+            jumpBufferTimer = new CountdownTimer(jumpBufferTime);
 
             dashTimer = new CountdownTimer(dashDuration);
             dashCooldownTimer = new CountdownTimer(dashCooldown);
@@ -88,7 +95,7 @@ namespace CroakCreek
             runTimer = new StopwatchTimer();
             runHoldTimer = new StopwatchTimer();
 
-            timers = new List<Utilities.Timer>(capacity: 6) { jumpTimer, jumpCooldownTimer, dashTimer, dashCooldownTimer, runTimer, runHoldTimer };
+            timers = new List<Utilities.Timer>(capacity: 8) { jumpTimer, jumpCooldownTimer, coyoteTimer, jumpBufferTimer, dashTimer, dashCooldownTimer, runTimer, runHoldTimer };
 
             jumpTimer.OnTimerStop += () => jumpCooldownTimer.Start();
         }
@@ -114,6 +121,11 @@ namespace CroakCreek
             else if (!performed && jumpTimer.IsRunning)
             {
                 jumpTimer.Stop();
+            }
+
+            if (performed)
+            {
+                jumpBufferTimer.Start();
             }
         }
 
@@ -179,6 +191,13 @@ namespace CroakCreek
                 HandleStaminaDrain();
             else
                 HandleStaminaRegen();
+
+            if (groundChecker.IsGrounded && !wasGrounded)
+            {
+                coyoteTimer.Start();
+            }
+
+            wasGrounded = groundChecker.IsGrounded;
         }
 
         private void FixedUpdate()
@@ -236,7 +255,17 @@ namespace CroakCreek
 
         void HandleJump()
         {
-            // If not jumping and grounded, keep jump velocity at 0
+            // If eligible to jump
+            if (!jumpTimer.IsRunning &&
+                jumpBufferTimer.IsRunning &&
+                (groundChecker.IsGrounded || coyoteTimer.IsRunning) &&
+                !jumpCooldownTimer.IsRunning)
+            {
+                jumpTimer.Start();
+                jumpBufferTimer.Stop(); // consume buffered input
+                Debug.Log("Jump started!");
+            }
+
             if (!jumpTimer.IsRunning && groundChecker.IsGrounded)
             {
                 jumpVelocity = ZeroF;
@@ -244,25 +273,22 @@ namespace CroakCreek
                 return;
             }
 
-            // If jumping or falling calculate velocity
+            // Apply jump velocity
             if (jumpTimer.IsRunning)
             {
-                if (jumpTimer.Progress > 0f)
-                {
-                    // Use stronger gravity to make ascent faster
-                    float effectiveGravity = Mathf.Abs(Physics.gravity.y) * ascentGravityMultiplier;
-                    jumpVelocity = Mathf.Sqrt(2 * jumpMaxHeight * effectiveGravity);
-                }
+                coyoteTimer.Stop(); // consume coyote time
+                float effectiveGravity = Mathf.Abs(Physics.gravity.y) * ascentGravityMultiplier;
+                jumpVelocity = Mathf.Sqrt(2 * jumpMaxHeight * effectiveGravity);
             }
             else
             {
-                // Gravity Takes over
                 jumpVelocity += Physics.gravity.y * gravityMultiplier * Time.fixedDeltaTime;
             }
 
-            // Apply Velocity
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpVelocity, rb.linearVelocity.z);
         }
+
+
 
         private void HandleStaminaDrain()
         {

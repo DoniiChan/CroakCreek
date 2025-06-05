@@ -8,11 +8,18 @@ namespace CroakCreek
 
         private void OnTriggerEnter(Collider other)
         {
+            Rigidbody rb = other.GetComponent<Rigidbody>();
             HealthManager healthManager = other.GetComponent<HealthManager>();
+            IHitable hitable = other.GetComponent<IHitable>();
 
-            if (healthManager != null)
+            if (healthManager && rb != null)
             {
                 healthManager.Damage(damage);
+
+                if (hitable != null)
+                {
+                    hitable.Excecute(transform);
+                }
             }
         }
     }
