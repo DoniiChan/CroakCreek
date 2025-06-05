@@ -38,7 +38,7 @@ namespace CroakCreek
 
             // Set barFill width fixed to full width
             Vector2 fillSize = barFill.sizeDelta;
-            fillSize.x = fullWidth - 5f;
+            fillSize.x = fullWidth - 2f;
             barFill.sizeDelta = fillSize;
 
             // Set barMask size to fullWidth (same size as fill)

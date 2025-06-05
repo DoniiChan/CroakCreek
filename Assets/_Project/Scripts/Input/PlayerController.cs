@@ -18,7 +18,6 @@ namespace CroakCreek
         [SerializeField, Self] Rigidbody rb;
         [SerializeField, Self] GroundChecker groundChecker;
         [SerializeField] StaminaManager staminaManager;
-        [SerializeField] StaminaBar staminaBar;
         [SerializeField, Anywhere] InputReader input;
 
         [Header("Movement Settings")]
@@ -150,7 +149,6 @@ namespace CroakCreek
                     dashCooldownTimer.Start();
 
                     staminaManager.DecreaseStamina(dashCost);
-                    staminaBar.SetValue(staminaManager.currentSta);
                 }
             }
         }
@@ -276,7 +274,6 @@ namespace CroakCreek
                 if (runTimer.GetTime() >= 0.25f)
                 {
                     staminaManager.DecreaseStamina(1);
-                    staminaBar.SetValue(staminaManager.currentSta);
                     runTimer.Reset();
 
                     if (staminaManager.currentSta <= 0)
@@ -304,7 +301,6 @@ namespace CroakCreek
                 if (runTimer.GetTime() >= 0.135f)
                 {
                     staminaManager.RestoreStamina(1);
-                    staminaBar.SetValue(staminaManager.currentSta);
                     runTimer.Reset();
 
                     if (!canRun && staminaManager.currentSta >= staminaManager.maxSta)
