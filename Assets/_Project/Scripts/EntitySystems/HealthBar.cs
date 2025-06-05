@@ -38,7 +38,7 @@ namespace CroakCreek
 
             // Set barFill width fixed to full width
             Vector2 fillSize = barFill.sizeDelta;
-            fillSize.x = fullWidth;
+            fillSize.x = fullWidth - 5f;
             barFill.sizeDelta = fillSize;
 
             // Set barMask size to fullWidth (same size as fill)
@@ -47,13 +47,9 @@ namespace CroakCreek
             maskSize.x = fullWidth;
             maskRect.sizeDelta = maskSize;
 
-            // Resize border if any
-            if (border != null)
-            {
-                Vector2 borderSize = border.sizeDelta;
-                borderSize.x = fullWidth;
-                border.sizeDelta = borderSize;
-            }
+            Vector2 borderSize = border.sizeDelta;
+            borderSize.x = fullWidth;
+            border.sizeDelta = borderSize;
 
             // Reset padding so no clipping initially
             var p = barMask.padding;
