@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace CroakCreek
 {
@@ -7,6 +8,10 @@ namespace CroakCreek
     {
         [SerializeField] public int maxHp = 20;
         [SerializeField] public int currentHp = 0;
+        [SerializeField] PanelEventHandler gameOverScreen;
+        [SerializeField] PlayerController playerController;
+        [SerializeField] public bool isFrog;
+        DisableMovement freeze;
 
         public UnityEvent<int> Damaged;
         public UnityEvent<int> Healed;
@@ -14,6 +19,7 @@ namespace CroakCreek
 
         void Start()
         {
+            freeze = GetComponent<DisableMovement>();
             currentHp = maxHp;  // initialize at max health
         }
         public int currentValue => currentHp;
@@ -26,7 +32,6 @@ namespace CroakCreek
         public void Damage(int amount) => SetHp(currentHp - amount);
         public void Heal(int amount) => SetHp(currentHp + amount);
         public void HealFull() => SetHp(maxHp);
-        public void Kill() => SetHp(0);
         public void Adjust(int value) => SetHp(value);
 
         private bool _isSettingHp = false;
@@ -59,7 +64,43 @@ namespace CroakCreek
             _isSettingHp = false;
         }
 
+        public void Kill()
+        {
+            SetHp(0);
+
+            if (isFrog)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                freeze.Freeze();
+
+                gameOverScreen.gameObject.SetActive(true);
+            }
+        }
 
 
+        public void Respawn()
+        {
+            playerController.enabled = true;
+
+            freeze.UnFreeze();
+
+            HealFull();
+            gameOverScreen.gameObject.SetActive(false);
+        }
+
+        public void Quit()
+        {
+            #if UNITY_STANDALONE
+                        Application.Quit();
+                        gameOverScreen.gameObject.SetActive(false);
+            #endif
+            #if UNITY_EDITOR
+                        UnityEditor.EditorApplication.isPlaying = false;
+                        gameOverScreen.gameObject.SetActive(false);
+            #endif
+        }
     }
 }

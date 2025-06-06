@@ -13,9 +13,12 @@ namespace CroakCreek
         [SerializeField] StaminaManager staminaManager;
         [SerializeField] PanelEventHandler levelUp;
         [SerializeField] TextMeshProUGUI coinText;
+        [SerializeField] PlayerController playerController;
+        DisableMovement freeze;
 
         private void Awake()
         {
+            freeze = GetComponent<DisableMovement>();
             levelUp.gameObject.SetActive(false);
         }
 
@@ -30,6 +33,7 @@ namespace CroakCreek
 
                 if (Coin % 3 == 0)
                 {
+                    freeze.Freeze();
                     levelUp.gameObject.SetActive(true);
                     Coin = 0;
                 }
@@ -41,6 +45,7 @@ namespace CroakCreek
             healthManager.maxHp += 5;
             healthManager.HealFull();
             levelUp.gameObject.SetActive(false);
+            freeze.UnFreeze();
             Debug.Log("Max HP increased to " + healthManager.maxHp);
         }
 
@@ -48,6 +53,7 @@ namespace CroakCreek
         {
             staminaManager.maxSta += 3;
             levelUp.gameObject.SetActive(false);
+            freeze.UnFreeze();
             Debug.Log("Max Stamina increased to " + staminaManager.maxSta);
         }
     }

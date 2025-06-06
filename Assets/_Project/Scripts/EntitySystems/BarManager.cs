@@ -13,6 +13,9 @@ namespace CroakCreek
         [SerializeField] RectTransform border;             // Optional border image
         [SerializeField] float pixelsPerUnit = 10f;        // Width per unit (HP or Stamina)
 
+        [SerializeField] Transform target;
+        [SerializeField] Vector3 offset;
+
         private IBarValueSource barSource;
         private float fullWidth;
 
@@ -48,12 +51,20 @@ namespace CroakCreek
             }
         }
 
+        private void LateUpdate()
+        {
+            if (healthManager != null && healthManager.isFrog && target != null)
+            {
+                transform.position = Camera.main.WorldToScreenPoint(target.position + offset);
+            }
+        }
+
         private void ResizeBar()
         {
-            fullWidth = barSource.maxValue * pixelsPerUnit;
+            fullWidth = (target != null) ? 200 : barSource.maxValue * pixelsPerUnit;
 
             Vector2 fillSize = barFill.sizeDelta;
-            fillSize.x = fullWidth - 2f;
+            fillSize.x = fullWidth -2f;
             barFill.sizeDelta = fillSize;
 
             RectTransform maskRect = barMask.GetComponent<RectTransform>();
@@ -72,12 +83,14 @@ namespace CroakCreek
 
         public void SetValue(int newValue)
         {
-            float visibleWidth = (float)newValue / barSource.maxValue * fullWidth;
-            float clipAmount = Mathf.Clamp(fullWidth - visibleWidth, 0, fullWidth);
+            float percentage = Mathf.Clamp01((float)newValue / barSource.maxValue);
 
-            var padding = barMask.padding;
-            padding.z = clipAmount;
-            barMask.padding = padding;
+            // Apply percentage to mask width (controls visible portion)
+            RectTransform maskRect = barMask.GetComponent<RectTransform>();
+            Vector2 maskSize = maskRect.sizeDelta;
+            maskSize.x = fullWidth * percentage;
+            maskRect.sizeDelta = maskSize;
         }
+
     }
 }
