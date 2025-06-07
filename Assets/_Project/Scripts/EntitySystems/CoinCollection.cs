@@ -13,12 +13,9 @@ namespace CroakCreek
         [SerializeField] StaminaManager staminaManager;
         [SerializeField] PanelEventHandler levelUp;
         [SerializeField] TextMeshProUGUI coinText;
-        [SerializeField] PlayerController playerController;
-        DisableMovement freeze;
 
         private void Awake()
         {
-            freeze = GetComponent<DisableMovement>();
             levelUp.gameObject.SetActive(false);
         }
 

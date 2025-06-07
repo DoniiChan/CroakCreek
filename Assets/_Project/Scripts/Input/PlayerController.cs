@@ -43,6 +43,7 @@ namespace CroakCreek
 
         private bool isRunning;
         private bool runInputHeld;
+        private bool jumpInputHeld;
         private bool isDashing;
         private bool outOfSta;
         private bool canRun;
@@ -114,20 +115,19 @@ namespace CroakCreek
 
         void OnJump(bool performed)
         {
-            if (performed && !jumpTimer.IsRunning && !jumpCooldownTimer.IsRunning && groundChecker.IsGrounded)
-            {
-                jumpTimer.Start();
-            }
-            else if (!performed && jumpTimer.IsRunning)
-            {
-                jumpTimer.Stop();
-            }
+            jumpInputHeld = performed;
 
             if (performed)
             {
-                jumpBufferTimer.Start();
+                jumpBufferTimer.Start(); // store jump input
+            }
+            else if (!performed && jumpTimer.IsRunning)
+            {
+                jumpTimer.Stop(); // stop early jump for variable height
             }
         }
+
+
 
         private void OnRun(bool runState)
         {
@@ -192,7 +192,7 @@ namespace CroakCreek
             else
                 HandleStaminaRegen();
 
-            if (groundChecker.IsGrounded && !wasGrounded)
+            if (!groundChecker.IsGrounded && wasGrounded)
             {
                 coyoteTimer.Start();
             }
@@ -255,28 +255,27 @@ namespace CroakCreek
 
         void HandleJump()
         {
-            // If eligible to jump
-            if (!jumpTimer.IsRunning &&
-                jumpBufferTimer.IsRunning &&
-                (groundChecker.IsGrounded || coyoteTimer.IsRunning) &&
-                !jumpCooldownTimer.IsRunning)
+            bool canJump = (groundChecker.IsGrounded || coyoteTimer.IsRunning) &&
+                           !jumpCooldownTimer.IsRunning &&
+                           !jumpTimer.IsRunning &&
+                           jumpBufferTimer.IsRunning;
+
+            if (canJump)
             {
                 jumpTimer.Start();
-                jumpBufferTimer.Stop(); // consume buffered input
-                Debug.Log("Jump started!");
+                jumpBufferTimer.Stop();
+                coyoteTimer.Stop();
+                //jumpVelocity = Mathf.Sqrt(2 * jumpMaxHeight * Mathf.Abs(Physics.gravity.y) * ascentGravityMultiplier);
             }
 
             if (!jumpTimer.IsRunning && groundChecker.IsGrounded)
             {
                 jumpVelocity = ZeroF;
-                jumpTimer.Stop();
                 return;
             }
 
-            // Apply jump velocity
             if (jumpTimer.IsRunning)
             {
-                coyoteTimer.Stop(); // consume coyote time
                 float effectiveGravity = Mathf.Abs(Physics.gravity.y) * ascentGravityMultiplier;
                 jumpVelocity = Mathf.Sqrt(2 * jumpMaxHeight * effectiveGravity);
             }
@@ -285,9 +284,14 @@ namespace CroakCreek
                 jumpVelocity += Physics.gravity.y * gravityMultiplier * Time.fixedDeltaTime;
             }
 
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpVelocity, rb.linearVelocity.z);
-        }
+            if (!jumpInputHeld && jumpTimer.IsRunning)
+            {
+                jumpTimer.Stop();
+            }
 
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpVelocity, rb.linearVelocity.z);
+
+        }
 
 
         private void HandleStaminaDrain()

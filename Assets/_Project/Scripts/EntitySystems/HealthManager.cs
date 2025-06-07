@@ -41,8 +41,6 @@ namespace CroakCreek
             if (_isSettingHp) return;  // Prevent recursion
             _isSettingHp = true;
 
-            Debug.Log($"SetHp called. currentHp={currentHp}, value(before clamp)={value}");
-
             value = Mathf.Clamp(value, 0, maxHp);
             if (value == currentHp)
             {
