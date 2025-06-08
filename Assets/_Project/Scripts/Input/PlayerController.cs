@@ -41,6 +41,11 @@ namespace CroakCreek
         [SerializeField] float coyoteTime = 0.2f;
         [SerializeField] float jumpBufferTime = 0.2f;
 
+        [Header("Fire Settings")]
+        [SerializeField] private GameObject netPrefab;
+        [SerializeField] private PlayerAim playerAim;
+        [SerializeField] private Transform netSpawnPoint;
+
         private bool isRunning;
         private bool runInputHeld;
         private bool jumpInputHeld;
@@ -105,12 +110,14 @@ namespace CroakCreek
         {
             input.Jump += OnJump;
             input.Run += OnRun;
+            input.Fire += OnFire;
         }
 
         private void OnDisable()
         {
             input.Jump -= OnJump;
             input.Run -= OnRun;
+            input.Fire -= OnFire;
         }
 
         void OnJump(bool performed)
@@ -127,7 +134,13 @@ namespace CroakCreek
             }
         }
 
-
+        private void OnFire(bool performed)
+        {
+            if (performed)
+            {
+                ThrowNet();
+            }
+        }
 
         private void OnRun(bool runState)
         {
@@ -345,6 +358,12 @@ namespace CroakCreek
             {
                 runTimer.Stop();
             }
+        }
+
+        private void ThrowNet()
+        {
+            GameObject net = Instantiate(netPrefab, netSpawnPoint.position, Quaternion.identity);
+            net.GetComponent<NetScript>().Spawn(playerAim.AimDirection);
         }
 
         void SmoothSpeed(float value)

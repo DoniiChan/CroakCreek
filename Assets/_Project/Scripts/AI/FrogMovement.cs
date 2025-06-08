@@ -72,7 +72,7 @@ public class FrogMovement : MonoBehaviour
 
         rb.AddForce(force, ForceMode.Impulse);
 
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
 
         isHopping = false;
         lastHopTime = Time.time;

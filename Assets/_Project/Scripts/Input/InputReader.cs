@@ -11,6 +11,7 @@ namespace CroakCreek
         public event UnityAction<Vector2> Move = delegate { };
         public event UnityAction<bool> Jump = delegate { };
         public event UnityAction<bool> Run = delegate { };
+        public event UnityAction<bool> Fire = delegate { };
 
         private PlayerInputActions inputActions;
 
@@ -80,7 +81,18 @@ namespace CroakCreek
             }
         }
 
-        public void OnFire(InputAction.CallbackContext context) { /* noop */ }
+        public void OnFire(InputAction.CallbackContext context)
+        {
+            switch (context.phase)
+            {
+                case InputActionPhase.Started:
+                    Fire.Invoke(true);
+                    break;
+                case InputActionPhase.Canceled:
+                    Fire.Invoke(false);
+                    break;
+            }
+        }
 
     }
 }
