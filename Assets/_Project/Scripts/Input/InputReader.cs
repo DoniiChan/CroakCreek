@@ -12,6 +12,7 @@ namespace CroakCreek
         public event UnityAction<bool> Jump = delegate { };
         public event UnityAction<bool> Run = delegate { };
         public event UnityAction<bool> Fire = delegate { };
+        public event UnityAction<bool> Lock = delegate { };
 
         private PlayerInputActions inputActions;
 
@@ -94,5 +95,17 @@ namespace CroakCreek
             }
         }
 
+        public void OnLockOn(InputAction.CallbackContext context)
+        {
+            switch (context.phase)
+            {
+                case InputActionPhase.Started:
+                    Lock.Invoke(true);
+                    break;
+                case InputActionPhase.Canceled:
+                    Lock.Invoke(false);
+                    break;
+            }
+        }
     }
 }

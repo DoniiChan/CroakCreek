@@ -19,6 +19,7 @@ namespace CroakCreek
         [SerializeField, Self] GroundChecker groundChecker;
         [SerializeField] StaminaManager staminaManager;
         [SerializeField, Anywhere] InputReader input;
+        [SerializeField] private LockOn lockOn;
 
         [Header("Movement Settings")]
         [SerializeField] float walkSpeed = 400f;
@@ -42,9 +43,11 @@ namespace CroakCreek
         [SerializeField] float jumpBufferTime = 0.2f;
 
         [Header("Fire Settings")]
-        [SerializeField] private GameObject netPrefab;
+        [SerializeField] private Transform netObject;
         [SerializeField] private PlayerAim playerAim;
         [SerializeField] private Transform netSpawnPoint;
+
+        private NetScript netScript;
 
         private bool isRunning;
         private bool runInputHeld;
@@ -89,6 +92,8 @@ namespace CroakCreek
 
             rb.freezeRotation = true;
 
+            netScript = netObject.GetComponent<NetScript>();
+            
             // setup timers
             jumpTimer = new CountdownTimer(jumpDuration);
             jumpCooldownTimer = new CountdownTimer(jumpCooldown);
@@ -111,6 +116,7 @@ namespace CroakCreek
             input.Jump += OnJump;
             input.Run += OnRun;
             input.Fire += OnFire;
+            input.Lock += OnLock;
         }
 
         private void OnDisable()
@@ -118,6 +124,7 @@ namespace CroakCreek
             input.Jump -= OnJump;
             input.Run -= OnRun;
             input.Fire -= OnFire;
+            input.Lock -= OnLock;
         }
 
         void OnJump(bool performed)
@@ -140,6 +147,12 @@ namespace CroakCreek
             {
                 ThrowNet();
             }
+        }
+
+        public void OnLock(bool performed)
+        {
+            if (performed)
+                lockOn.ToggleLock();
         }
 
         private void OnRun(bool runState)
@@ -362,8 +375,8 @@ namespace CroakCreek
 
         private void ThrowNet()
         {
-            GameObject net = Instantiate(netPrefab, netSpawnPoint.position, Quaternion.identity);
-            net.GetComponent<NetScript>().Spawn(playerAim.AimDirection);
+            netObject.position = netSpawnPoint.position; // Reset its position
+            netObject.GetComponent<NetScript>().Spawn(playerAim.AimDirection);
         }
 
         void SmoothSpeed(float value)
@@ -372,23 +385,3 @@ namespace CroakCreek
         }
     }
 }
-
-// runHoldTimer.GetTime() < runHoldDuration && staminaManager.currentSta >= 5 && groundChecker.IsGrounded
-
-//runHoldTimer.GetTime() < runHoldDuration &&
-//                    !dashTimer.IsRunning &&
-//                    !dashCooldownTimer.IsRunning &&
-//                    staminaManager.currentSta >= 5 &&
-//                    movement.magnitude > 0f && groundChecker.IsGrounded)
-
-
-
-// Might Re-use
-
-//  HandleRotation(adjustedDirection);
-//  void HandleRotation(Vector3 adjustedDirection)
-//  {
-//      var targetRotation = Quaternion.LookRotation(adjustedDirection);
-//      transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-//      transform.LookAt(transform.position + adjustedDirection);
-//  }

@@ -49,10 +49,7 @@ namespace CroakCreek
                 ResizeBar();
                 SetValue(barSource.currentValue);
             }
-        }
 
-        private void LateUpdate()
-        {
             if (healthManager != null && healthManager.isFrog && target != null)
             {
                 transform.position = Camera.main.WorldToScreenPoint(target.position + offset);

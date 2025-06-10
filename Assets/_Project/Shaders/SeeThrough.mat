@@ -44,7 +44,7 @@ Material:
     - _Size: 0
     - _Smoothness: 0.5
     m_Colors:
-    - _Position: {r: 0.5, g: 0.5, b: 14.81012, a: 0}
+    - _Position: {r: 0.49996513, g: 0.47832352, b: 15.04415, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &4900639474927020991
