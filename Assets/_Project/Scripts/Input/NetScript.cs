@@ -1,4 +1,5 @@
 using CroakCreek;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class NetScript : MonoBehaviour
@@ -10,9 +11,10 @@ public class NetScript : MonoBehaviour
     public float throwSpeed = 20f;
     public float maxRange = 5f;
     public float netCooldown = 0.5f;
-    public float throwDuration = 0.5f;
-    public float throwTimer;
+    private float throwDuration = 0.5f;
+    public float throwTime;
 
+    private float returnSpeed = 20f;
     private float returnDuration = 0.5f;
     public float returnTimer;
     private Vector3 returnStartPosition;
@@ -51,8 +53,8 @@ public class NetScript : MonoBehaviour
         if (!isMoving)
         {
             EnableObject();
-            throwTimer = 0f;
-            throwSpeed = throwVelocity.Evaluate(throwTimer);
+            throwTime = 0f;
+            throwSpeed = throwVelocity.Evaluate(throwTime);
             moveDirection = direction.normalized;
             startPosition = transform.position;
             isMoving = true;
@@ -65,16 +67,17 @@ public class NetScript : MonoBehaviour
 
         if (!returning)
         {
-            throwTimer += Time.deltaTime;
-            throwSpeed = throwVelocity.Evaluate(throwTimer);
+            throwTime += Time.deltaTime;
+
+            throwSpeed = throwVelocity.Evaluate(throwTime);
 
             transform.position += moveDirection * throwSpeed * Time.deltaTime;
+            //transform.position = Vector3.Lerp(playerTransform.position, moveDirection, throwTime);
 
             if (Vector3.Distance(startPosition, transform.position) >= maxRange)
             {
                 returning = true;
                 returnTimer = 0f;
-                returnStartPosition = transform.position;
             }
         }
         else // if (returning)
@@ -82,9 +85,9 @@ public class NetScript : MonoBehaviour
             returnTimer += Time.deltaTime;
             float returnTime = Mathf.Clamp01(returnTimer / returnDuration);
 
-            //float returnSpeed = returnVelocity.Evaluate(returnTime);
+            //returnSpeed = returnVelocity.Evaluate(returnTime);
 
-            transform.position = Vector3.Lerp(returnStartPosition, playerTransform.position, returnTime);
+            transform.position = Vector3.Lerp(transform.position, playerTransform.position, returnTime);
 
             if (returnTime >= 1f)
             {
