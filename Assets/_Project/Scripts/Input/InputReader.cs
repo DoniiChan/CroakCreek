@@ -9,6 +9,7 @@ namespace CroakCreek
     public class InputReader : ScriptableObject, IPlayerActions
     {
         public event UnityAction<Vector2> Move = delegate { };
+        public event UnityAction<Vector2> Look = delegate { };
         public event UnityAction<bool> Jump = delegate { };
         public event UnityAction<bool> Run = delegate { };
         public event UnityAction<bool> Fire = delegate { };
@@ -106,6 +107,11 @@ namespace CroakCreek
                     Lock.Invoke(false);
                     break;
             }
+        }
+
+        public void OnLookAround(InputAction.CallbackContext context)
+        {
+            Look.Invoke(context.ReadValue<Vector2>());
         }
     }
 }

@@ -49,6 +49,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Look Around",
+                    "type": "Value",
+                    "id": "ab67d95d-65d5-4b5d-bdcd-a0c6d2436b3e",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -176,7 +185,7 @@
                 {
                     "name": "",
                     "id": "143bb1cd-cc10-4eca-a2f0-a3664166fe91",
-                    "path": "<Gamepad>/rightTrigger",
+                    "path": "<Gamepad>/buttonWest",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
@@ -242,11 +251,22 @@
                 {
                     "name": "",
                     "id": "7f4f74e9-9c53-47bb-8c94-cc7bdc4379a0",
-                    "path": "<Gamepad>/rightStick/down",
+                    "path": "<Gamepad>/buttonNorth",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "LockOn",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4099f9d0-1eeb-434a-bc93-968c1f773648",
+                    "path": "<Gamepad>/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Look Around",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -269,7 +289,7 @@
                     "name": "Submit",
                     "type": "Button",
                     "id": "bd29a921-7f6f-4c0a-9f86-763b759ebfa3",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -278,7 +298,7 @@
                     "name": "Cancel",
                     "type": "Button",
                     "id": "084257cc-e375-4d3f-aa4b-400d417f80fe",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false

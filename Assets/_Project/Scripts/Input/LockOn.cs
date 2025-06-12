@@ -7,7 +7,7 @@ namespace CroakCreek
         [SerializeField] private float range;
         [SerializeField] private RectTransform lockIndicator;
 
-        private Transform target = null;
+        public Transform target = null;
         private Enemy targetEnemy;
         private Vector3 offset = new Vector3(0, 2, 0);
 
@@ -18,7 +18,7 @@ namespace CroakCreek
 
         public void ToggleLock()
         {
-            if (target != null)
+            if (Locking())
             {
                 SetTarget(null); // clear the current lock
             }
@@ -74,6 +74,13 @@ namespace CroakCreek
             {
                 lockIndicator.position = Camera.main.WorldToScreenPoint(target.position + offset);
             }
+
+            if (Locking())
+            {
+                LockNearestEnemy();
+            }
         }
+
+        public bool Locking() => target != null;
     }
 }

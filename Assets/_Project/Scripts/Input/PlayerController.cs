@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using Unity.Cinemachine;
 using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 using Utilities;
@@ -117,6 +116,7 @@ namespace CroakCreek
             input.Run += OnRun;
             input.Fire += OnFire;
             input.Lock += OnLock;
+            input.Look += playerAim.OnLookInput;
         }
 
         private void OnDisable()
@@ -125,6 +125,7 @@ namespace CroakCreek
             input.Run -= OnRun;
             input.Fire -= OnFire;
             input.Lock -= OnLock;
+            input.Look -= playerAim.OnLookInput;
         }
 
         void OnJump(bool performed)
@@ -193,8 +194,10 @@ namespace CroakCreek
 
         private void Update()
         {
+            // Movement
             movement = new Vector3(input.Direction.x, ZeroF, input.Direction.y);
 
+            // HandleDash direction
             if (movement.magnitude == ZeroF)
             {
                 dashDirection.x = ZeroF;
@@ -208,16 +211,19 @@ namespace CroakCreek
 
             HandleTimers();
 
+            // Handle Run input
             if (runInputHeld && runHoldTimer.GetTime() >= runHoldDuration && staminaManager.currentSta > 0 && canRun)
                 isRunning = true;
             else
                 isRunning = false;
 
+            // Handle Stamina
             if (isRunning && movement.magnitude > 0f)
                 HandleStaminaDrain();
             else
                 HandleStaminaRegen();
 
+            // Handle Coyote Time
             if (!groundChecker.IsGrounded && wasGrounded)
             {
                 coyoteTimer.Start();
@@ -375,8 +381,19 @@ namespace CroakCreek
 
         private void ThrowNet()
         {
-            netObject.position = netSpawnPoint.position; // Reset its position
-            netObject.GetComponent<NetScript>().Spawn(playerAim.AimDirection);
+            if (!netScript.IsCoolingDown())
+            {
+                if (lockOn.target == null)
+                {
+                    netScript.Throw(playerAim.AimDirection);
+                }
+                else
+                {
+                    Vector3 directionToTarget = (lockOn.target.position - transform.position).normalized;
+                    netScript.Throw(directionToTarget);
+                }
+                
+            }
         }
 
         void SmoothSpeed(float value)

@@ -11,11 +11,18 @@ namespace CroakCreek
         public Vector3 AimDirection { get; private set; }
         public Vector3 AimPoint { get; private set; }
 
+        private Vector2 rightStickInput;
+
         private Camera mainCamera;
 
         private void Awake()
         {
             mainCamera = Camera.main;
+        }
+
+        public void OnLookInput(Vector2 input)
+        {
+            rightStickInput = input;
         }
 
         private void Update()
@@ -30,16 +37,28 @@ namespace CroakCreek
 
         private void UpdateAimDirection()
         {
-            Vector2 mousePos = Mouse.current.position.ReadValue();
-            Ray ray = mainCamera.ScreenPointToRay(mousePos);
-
-            if (Physics.Raycast(ray, out RaycastHit hitInfo, maxAimDistance))
+            // Prioritize right stick if active
+            if (rightStickInput.sqrMagnitude > 0.01f)
             {
-                AimPoint = hitInfo.point;
+                Vector3 flatForward = new Vector3(rightStickInput.x, 0, rightStickInput.y).normalized;
+                AimDirection = flatForward;
 
-                AimDirection = (AimPoint - player.position).normalized;
+                AimPoint = player.position + flatForward * maxAimDistance;
 
-                Debug.DrawLine(player.position, AimPoint, Color.red);
+                Debug.DrawLine(player.position, AimPoint, Color.green);
+            }
+            else
+            {
+                Vector2 mousePos = Mouse.current.position.ReadValue();
+                Ray ray = mainCamera.ScreenPointToRay(mousePos);
+
+                if (Physics.Raycast(ray, out RaycastHit hitInfo, maxAimDistance))
+                {
+                    AimPoint = hitInfo.point;
+                    AimDirection = (AimPoint - player.position).normalized;
+
+                    Debug.DrawLine(player.position, AimPoint, Color.red);
+                }
             }
         }
 
