@@ -1,4 +1,6 @@
 using CroakCreek;
+using System.Collections;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -11,13 +13,13 @@ public class NetScript : MonoBehaviour
     public float throwSpeed = 20f;
     public float maxRange = 5f;
     public float netCooldown = 0.5f;
-    private float throwDuration = 0.5f;
+    public float throwDuration = 0.5f;
     public float throwTime;
 
-    private float returnSpeed = 20f;
-    private float returnDuration = 0.5f;
+    public float returnSpeed = 20f;
+    public float returnDuration = 0.5f;
     public float returnTimer;
-    private Vector3 returnStartPosition;
+    public Vector3 returnStartPosition;
 
     private Vector3 moveDirection;
     private Vector3 startPosition;
@@ -29,7 +31,8 @@ public class NetScript : MonoBehaviour
 
     void Awake()
     {
-        DisableObject();
+        GetComponent<SpriteRenderer>().enabled = false;
+        GetComponent<Collider>().enabled = false;
         GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
 
         playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
@@ -53,47 +56,44 @@ public class NetScript : MonoBehaviour
         if (!isMoving)
         {
             EnableObject();
+            throwSpeed = throwVelocity.Evaluate(0);
             throwTime = 0f;
-            throwSpeed = throwVelocity.Evaluate(throwTime);
             moveDirection = direction.normalized;
             startPosition = transform.position;
             isMoving = true;
             returning = false;
+            returnStartPosition = transform.position; // Ensure return origin is set
         }
     }
 
     private void HandleThrow()
     {
-
         if (!returning)
         {
             throwTime += Time.deltaTime;
-
-            throwSpeed = throwVelocity.Evaluate(throwTime);
-
+            throwSpeed = throwVelocity.Evaluate(throwTime / throwDuration); // Normalize over duration
             transform.position += moveDirection * throwSpeed * Time.deltaTime;
-            //transform.position = Vector3.Lerp(playerTransform.position, moveDirection, throwTime);
 
             if (Vector3.Distance(startPosition, transform.position) >= maxRange)
             {
                 returning = true;
                 returnTimer = 0f;
+                returnStartPosition = transform.position;
             }
         }
-        else // if (returning)
+        else
         {
+            GetComponent<Collider>().enabled = false;
             returnTimer += Time.deltaTime;
-            float returnTime = Mathf.Clamp01(returnTimer / returnDuration);
+            float t = Mathf.Clamp01(returnTimer / returnDuration);
+            returnSpeed = returnVelocity.Evaluate(t);
+            transform.position = Vector3.Lerp(returnStartPosition, playerTransform.position, returnSpeed);
 
-            //returnSpeed = returnVelocity.Evaluate(returnTime);
-
-            transform.position = Vector3.Lerp(transform.position, playerTransform.position, returnTime);
-
-            if (returnTime >= 1f)
+            if (t >= 1f)
             {
                 isMoving = false;
                 returning = false;
-                DisableObject();
+                GetComponent<SpriteRenderer>().enabled = false;
                 StartCooldown(netCooldown);
             }
         }
@@ -101,8 +101,6 @@ public class NetScript : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (returning) return;
-
         if (other.CompareTag("Wild"))
         {
             returning = true;
@@ -124,16 +122,9 @@ public class NetScript : MonoBehaviour
         isCoolingDown = false;
     }
 
-
     void EnableObject()
     {
         GetComponent<SpriteRenderer>().enabled = true;
         GetComponent<Collider>().enabled = true;
-    }
-
-    void DisableObject()
-    {
-        GetComponent<SpriteRenderer>().enabled = false;
-        GetComponent<Collider>().enabled = false;
     }
 }

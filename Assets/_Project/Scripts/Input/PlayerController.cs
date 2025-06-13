@@ -381,23 +381,19 @@ namespace CroakCreek
 
         private void ThrowNet()
         {
-            if (lockOn.target == null)
+            if (!netScript.IsCoolingDown())
             {
-                netScript.Throw(playerAim.AimDirection);
-            }
-            //if (!netScript.IsCoolingDown())
-            //{
-            //    if (lockOn.target == null)
-            //    {
-            //        netScript.Throw(playerAim.AimDirection);
-            //    }
-            //    else
-            //    {
-            //        Vector3 directionToTarget = (lockOn.target.position - transform.position).normalized;
-            //        netScript.Throw(directionToTarget);
-            //    }
+                if (lockOn.target == null)
+                {
+                    netScript.Throw(playerAim.AimDirection);
+                }
+                else
+                {
+                    Vector3 directionToTarget = (lockOn.target.position - transform.position).normalized;
+                    netScript.Throw(directionToTarget);
+                }
 
-            //}
+            }
         }
 
         void SmoothSpeed(float value)

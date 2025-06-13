@@ -59,7 +59,6 @@ namespace CroakCreek
                 target = targetEnemy.transform;
                 lockIndicator.gameObject.SetActive(true);
                 lockIndicator.position = Camera.main.WorldToScreenPoint(target.position + offset);
-                Debug.Log("Targeting: " + targetEnemy.name);
             }
             else
             {

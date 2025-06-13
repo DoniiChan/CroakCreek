@@ -6,7 +6,7 @@ using static PlayerInputActions;
 namespace CroakCreek
 {
     [CreateAssetMenu(fileName = "InputReader", menuName = "Platformer/InputReader")]
-    public class InputReader : ScriptableObject, IPlayerActions
+    public class InputReader : ScriptableObject, IPlayerActions, IUIActions
     {
         public event UnityAction<Vector2> Move = delegate { };
         public event UnityAction<Vector2> Look = delegate { };
@@ -14,6 +14,8 @@ namespace CroakCreek
         public event UnityAction<bool> Run = delegate { };
         public event UnityAction<bool> Fire = delegate { };
         public event UnityAction<bool> Lock = delegate { };
+
+        public event UnityAction MenuOpenClose = delegate { };
 
         private PlayerInputActions inputActions;
 
@@ -24,10 +26,13 @@ namespace CroakCreek
             if (inputActions == null)
             {
                 inputActions = new PlayerInputActions();
+
                 inputActions.Player.SetCallbacks(this);
+                inputActions.UI.SetCallbacks(this);
             }
 
-            inputActions.Enable();
+            inputActions.Player.Enable(); // Default to gameplay
+            inputActions.UI.Disable();
         }
 
         void OnDisable()
@@ -36,6 +41,18 @@ namespace CroakCreek
             {
                 inputActions.Disable(); // Disables all maps
             }
+        }
+
+        public void EnablePlayerInput()
+        {
+            inputActions.UI.Disable();
+            inputActions.Player.Enable();
+        }
+
+        public void EnableUIInput()
+        {
+            inputActions.Player.Disable();
+            inputActions.UI.Enable();
         }
 
         void OnDestroy()
@@ -112,6 +129,64 @@ namespace CroakCreek
         public void OnLookAround(InputAction.CallbackContext context)
         {
             Look.Invoke(context.ReadValue<Vector2>());
+        }
+
+        // UI Actions
+
+        public void OnNavigate(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnSubmit(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnCancel(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnPoint(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnClick(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnScrollWheel(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnMiddleClick(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnRightClick(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnTrackedDevicePosition(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnTrackedDeviceOrientation(InputAction.CallbackContext context)
+        {
+            // noop
+        }
+
+        public void OnMenuOpenClose(InputAction.CallbackContext context)
+        {
+            if (context.phase == InputActionPhase.Performed)
+                MenuOpenClose.Invoke();
         }
     }
 }

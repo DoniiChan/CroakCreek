@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Events;
 
 namespace CroakCreek
 {
@@ -8,16 +7,19 @@ namespace CroakCreek
     {
         [SerializeField] HealthManager healthManager;
         [SerializeField] StaminaManager staminaManager;
-        [SerializeField] RectTransform barFill;            // Fixed width fill image
-        [SerializeField] RectMask2D barMask;               // Mask that clips the fill
-        [SerializeField] RectTransform border;             // Optional border image
-        [SerializeField] float pixelsPerUnit = 10f;        // Width per unit (HP or Stamina)
+        [SerializeField] RectTransform barFill;
+        [SerializeField] RectMask2D barMask;
+        [SerializeField] RectTransform border;
+        [SerializeField] float pixelsPerUnit = 10f;
+        [SerializeField] float smoothSpeed = 5f;
 
         [SerializeField] Transform target;
         [SerializeField] Vector3 offset;
 
         private IBarValueSource barSource;
         private float fullWidth;
+        private float currentDisplayPercentage;
+        private float targetPercentage;
 
         private void Awake()
         {
@@ -40,6 +42,7 @@ namespace CroakCreek
         {
             ResizeBar();
             SetValue(barSource.currentValue);
+            currentDisplayPercentage = targetPercentage;
         }
 
         private void Update()
@@ -49,6 +52,10 @@ namespace CroakCreek
                 ResizeBar();
                 SetValue(barSource.currentValue);
             }
+
+            // Update bar fill smoothly
+            currentDisplayPercentage = Mathf.Lerp(currentDisplayPercentage, targetPercentage, Time.deltaTime * smoothSpeed);
+            UpdateBarVisual(currentDisplayPercentage);
 
             if (healthManager != null && healthManager.isFrog && target != null)
             {
@@ -61,7 +68,7 @@ namespace CroakCreek
             fullWidth = (target != null) ? 200 : barSource.maxValue * pixelsPerUnit;
 
             Vector2 fillSize = barFill.sizeDelta;
-            fillSize.x = fullWidth -2f;
+            fillSize.x = fullWidth - 2f;
             barFill.sizeDelta = fillSize;
 
             RectTransform maskRect = barMask.GetComponent<RectTransform>();
@@ -80,14 +87,15 @@ namespace CroakCreek
 
         public void SetValue(int newValue)
         {
-            float percentage = Mathf.Clamp01((float)newValue / barSource.maxValue);
+            targetPercentage = Mathf.Clamp01((float)newValue / barSource.maxValue);
+        }
 
-            // Apply percentage to mask width (controls visible portion)
+        private void UpdateBarVisual(float percentage)
+        {
             RectTransform maskRect = barMask.GetComponent<RectTransform>();
             Vector2 maskSize = maskRect.sizeDelta;
             maskSize.x = fullWidth * percentage;
             maskRect.sizeDelta = maskSize;
         }
-
     }
 }
